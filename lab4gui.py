@@ -24,9 +24,8 @@ def digits_entry_check(action, index, value_if_allowed, prior_value, text, valid
 
     return True
 
-class BaseSignal(tk.Frame):
+class BaseSignal:
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
         self.parent = parent
         self.controller = controller
         self.vcmd = (self.parent.register(digits_entry_check), "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%V")
@@ -34,7 +33,9 @@ class BaseSignal(tk.Frame):
         self.deltaT = 1.0
 
     def initInterface(self, properties):
-        propertyFrame = ttk.Frame(self, width=160, height=100)
+        self.mainFrame = ttk.Frame(self.parent)
+        self.mainFrame.grid(row=0, column=0, sticky="news") #??
+        propertyFrame = ttk.Frame(self.mainFrame, width=160, height=100)
         labels = {}
         self.entries = {}
         c = 0
@@ -52,14 +53,14 @@ class BaseSignal(tk.Frame):
 
     def basePlot(self):
         self.figure = Figure(figsize=(5,5), dpi=100) #check settings
-        self.canvas = FigureCanvasTkAgg(self.figure, self)
+        self.canvas = FigureCanvasTkAgg(self.figure, self.mainFrame)
         self.plot = self.figure.add_subplot(111)
         self.invalidatePlot()
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
 
-        toolbar = NavigationToolbar2TkAgg(self.canvas, self)
+        toolbar = NavigationToolbar2TkAgg(self.canvas, self.mainFrame)
         toolbar.update()
 
     def invalidatePlot(self):
@@ -67,6 +68,7 @@ class BaseSignal(tk.Frame):
         x = [ i * self.deltaT for i in range(int(self.t)) ]
         y = [ self.signal(i) for i in x ]
         self.plot.plot(x, y)
+        #self.plot.stem(x, y, linefmt='b--'),
         self.canvas.draw()
 
     def signal(self, t):
@@ -77,6 +79,9 @@ class BaseSignal(tk.Frame):
             self.__dict__[k] = float(i.get())
         self.invalidatePlot()
 
+    def destroy(self):
+        self.mainFrame.destroy()
+
     @staticmethod
     def getName(self):
         return self.name
@@ -84,8 +89,7 @@ class BaseSignal(tk.Frame):
 class DelayedImpulse(BaseSignal):
     n0 = 3
     name = 'Delayed Impulse'
-    def __init__(self, parent, controller):
-        BaseSignal.__init__(self, parent, controller)
+    def show(self):
         self.initInterface({"t" : self.t, "n0" : self.n0})
         self.basePlot()
 
@@ -98,8 +102,8 @@ class DelayedImpulse(BaseSignal):
 class DelayedJump(BaseSignal):
     n0 = 3
     name = 'Delayed Jump'
-    def __init__(self, parent, controller):
-        BaseSignal.__init__(self, parent, controller)
+
+    def show(self):
         self.initInterface({"t" : self.t, "n0" : self.n0})
         self.basePlot()
 
@@ -111,8 +115,7 @@ class DelayedJump(BaseSignal):
 class DiscreteDecresingExponent(BaseSignal):
     a = 0.5
     name = 'Discrete Decreasing Exponent'
-    def __init__(self, parent, controller):
-        BaseSignal.__init__(self, parent, controller)
+    def show(self):
         self.initInterface({"t" : self.t, "a" : self.a})
         self.basePlot()
 
@@ -124,8 +127,7 @@ class DiscreteSinusoid(BaseSignal):
     omega = 0.5
     phi = 0.5
     name = 'Discrete Sinusoid'
-    def __init__(self, parent, controller):
-        BaseSignal.__init__(self, parent, controller)
+    def show(self):
         self.initInterface({"t" : self.t, "a" : self.a, "omega" : self.omega, "phi" : self.phi})
         self.basePlot()
 
@@ -135,8 +137,7 @@ class DiscreteSinusoid(BaseSignal):
 class Meandr(BaseSignal):
     L = 4
     name = 'Meandr'
-    def __init__(self, parent, controller):
-        BaseSignal.__init__(self, parent, controller)
+    def show(self):
         self.initInterface({"t" : self.t, "L" : self.L})
         self.basePlot()
 
@@ -149,8 +150,7 @@ class Meandr(BaseSignal):
 class Saw(BaseSignal):
     L = 4
     name = 'Saw'
-    def __init__(self, parent, controller):
-        BaseSignal.__init__(self, parent, controller)
+    def show(self):
         self.initInterface({"t" : self.t, "L" : self.L})
         self.basePlot()
 
@@ -160,8 +160,7 @@ class Saw(BaseSignal):
 class Saw(BaseSignal):
     L = 4
     name = 'Saw'
-    def __init__(self, parent, controller):
-        BaseSignal.__init__(self, parent, controller)
+    def show(self):
         self.initInterface({"t" : self.t, "L" : self.L})
         self.basePlot()
 
@@ -174,8 +173,7 @@ class ExponentЕnvelope(BaseSignal):
     omega = 0.5
     phi = 1.5
     name = 'Exponent Еnvelope'
-    def __init__(self, parent, controller):
-        BaseSignal.__init__(self, parent, controller)
+    def show(self):
         self.initInterface({"t" : self.t, "a" : self.a, "tau" : self.tau,
                             "omega" : self.omega, "phi" : self.phi})
         self.basePlot()
@@ -191,6 +189,8 @@ class BalanceEnvelope(BaseSignal):
     name = 'Balance Envelope'
     def __init__(self, parent, controller):
         BaseSignal.__init__(self, parent, controller)
+
+    def show(self):
         self.initInterface({"t" : self.t, "a" : self.a, "u" : self.u,
                             "omega" : self.omega, "phi" : self.phi})
         self.basePlot()
@@ -207,6 +207,8 @@ class TonalEnvelope(BaseSignal):
     name = 'Tonal Envelope'
     def __init__(self, parent, controller):
         BaseSignal.__init__(self, parent, controller)
+
+    def show(self):
         self.initInterface({"t" : self.t, "a" : self.a, "m" : self.m,
                             "u" : self.u, "omega" : self.omega, "phi" : self.phi})
         self.basePlot()
@@ -219,14 +221,19 @@ class Signals(tk.Tk):
                 DiscreteSinusoid, Meandr, Saw, ExponentЕnvelope, BalanceEnvelope, TonalEnvelope )
 
     def show_frame(self, cont):
-        frame = self.frames[cont]
-        frame.tkraise()
+        if self.fr != None:
+            self.fr.destroy()
+        self.fr = self.frames[cont]
+        self.fr.show()
+        #frame.tkraise()
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         tk.Tk.wm_title(self, "Lab4")
         self.geometry("640x527")
+
+        self.fr = None #??
 
         self.container = tk.Frame(self)
         self.container.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -240,7 +247,7 @@ class Signals(tk.Tk):
         self.frames = {}
         for F in self.signals:
             frame = F(self.container, self)
-            frame.grid(row=0, column=0, sticky="news")
+            #frame.grid(row=0, column=0, sticky="news")
             self.frames[str(c)] = frame
             signalMenu.add_command(label=F.getName(F), command=(self.register(lambda x : self.show_frame(x)), c))
             c += 1
